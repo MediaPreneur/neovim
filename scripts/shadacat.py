@@ -49,8 +49,8 @@ class CharInt(int):
 
 ctable = {
     bytes: lambda s: s.decode('utf-8', 'strtrans'),
-    dict: lambda d: dict((mnormalize(k), mnormalize(v)) for k, v in d.items()),
-    list: lambda l: list(mnormalize(i) for i in l),
+    dict: lambda d: {mnormalize(k): mnormalize(v) for k, v in d.items()},
+    list: lambda l: [mnormalize(i) for i in l],
     int: lambda n: CharInt(n) if 0x20 <= n <= 0x7E else n,
 }
 

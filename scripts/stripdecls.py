@@ -21,7 +21,7 @@ def main(progname, cfname, only_static, move_all):
     cfname = os.path.abspath(os.path.normpath(cfname))
 
     hfname1 = os.path.splitext(cfname)[0] + os.extsep + 'h'
-    hfname2 = os.path.splitext(cfname)[0] + '_defs' + os.extsep + 'h'
+    hfname2 = f'{os.path.splitext(cfname)[0]}_defs{os.extsep}h'
 
     files_to_modify = (cfname, hfname1, hfname2)
 
@@ -29,14 +29,20 @@ def main(progname, cfname, only_static, move_all):
     src_dirname = os.path.join(os.path.dirname(__file__), '..', 'src')
     src_dirname = os.path.abspath(os.path.normpath(src_dirname))
     relname = os.path.join(src_dirname, 'nvim')
-    unit = index.parse(cfname, args=('-I' + src_dirname,
-                                     '-DUNIX',
-                                     '-DEXITFREE',
-                                     '-DFEAT_USR_CMDS',
-                                     '-DFEAT_CMDL_COMPL',
-                                     '-DFEAT_COMPL_FUNC',
-                                     '-DPROTO',
-                                     '-DUSE_MCH_ERRMSG'))
+    unit = index.parse(
+        cfname,
+        args=(
+            f'-I{src_dirname}',
+            '-DUNIX',
+            '-DEXITFREE',
+            '-DFEAT_USR_CMDS',
+            '-DFEAT_CMDL_COMPL',
+            '-DFEAT_COMPL_FUNC',
+            '-DPROTO',
+            '-DUSE_MCH_ERRMSG',
+        ),
+    )
+
     cursor = unit.cursor
 
     tostrip = defaultdict(OrderedDict)
@@ -81,7 +87,7 @@ def main(progname, cfname, only_static, move_all):
             include_line = next(iter(stripdict.values())).start_line
 
         lines = None
-        generated_existed = os.path.exists(fname + '.generated.h')
+        generated_existed = os.path.exists(f'{fname}.generated.h')
         with open(fname, 'rb') as F:
             lines = list(F)
 
