@@ -77,8 +77,8 @@ SITENAVI_LINKS = """
 SITENAVI_LINKS_PLAIN = SITENAVI_LINKS.format(helptxt='help.txt.html')
 SITENAVI_LINKS_WEB = SITENAVI_LINKS.format(helptxt='/')
 
-SITENAVI_PLAIN = '<p>' + SITENAVI_LINKS_PLAIN + '</p>'
-SITENAVI_WEB = '<p>' + SITENAVI_LINKS_WEB + '</p>'
+SITENAVI_PLAIN = f'<p>{SITENAVI_LINKS_PLAIN}</p>'
+SITENAVI_WEB = f'<p>{SITENAVI_LINKS_WEB}</p>'
 
 SITENAVI_SEARCH = '<table width="100%"><tbody><tr><td>' + SITENAVI_LINKS_WEB + \
     '</td><td style="text-align: right; max-width: 25vw"><div class="gcse-searchbox">' \
@@ -119,29 +119,87 @@ PAT_SPECIAL = r'(<.+?>|\{.+?}|' \
     r'arg|arguments|ident|addr|group)]|' \
     r'(?<=\s)\[[-a-z^A-Z0-9_]{2,}])'
 PAT_TITLE = r'(Vim version [0-9.a-z]+|VIM REFERENCE.*)'
-PAT_NOTE = r'((?<!' + PAT_WORDCHAR + r')(?:note|NOTE|Notes?):?' \
-    r'(?!' + PAT_WORDCHAR + r'))'
+PAT_NOTE = (
+    (f'((?<!{PAT_WORDCHAR}' + r')(?:note|NOTE|Notes?):?' r'(?!') + PAT_WORDCHAR
+) + r'))'
+
 PAT_URL = r'((?:https?|ftp)://[^\'"<> \t]+[a-zA-Z0-9/])'
-PAT_WORD = r'((?<!' + PAT_WORDCHAR + r')' + PAT_WORDCHAR + r'+' \
-    r'(?!' + PAT_WORDCHAR + r'))'
+PAT_WORD = (
+    (f'((?<!{PAT_WORDCHAR}){PAT_WORDCHAR}' + r'+' r'(?!') + PAT_WORDCHAR
+) + r'))'
+
 
 RE_LINKWORD = re.compile(
-    PAT_OPTWORD + '|' +
-    PAT_CTRL + '|' +
-    PAT_SPECIAL)
+    (((f'{PAT_OPTWORD}|' + PAT_CTRL) + '|') + PAT_SPECIAL)
+)
+
 RE_TAGWORD = re.compile(
-    PAT_HEADER + '|' +
-    PAT_GRAPHIC + '|' +
-    PAT_PIPEWORD + '|' +
-    PAT_STARWORD + '|' +
-    PAT_COMMAND + '|' +
-    PAT_OPTWORD + '|' +
-    PAT_CTRL + '|' +
-    PAT_SPECIAL + '|' +
-    PAT_TITLE + '|' +
-    PAT_NOTE + '|' +
-    PAT_URL + '|' +
-    PAT_WORD)
+    (
+        (
+            (
+                (
+                    (
+                        (
+                            (
+                                (
+                                    (
+                                        (
+                                            (
+                                                (
+                                                    (
+                                                        (
+                                                            (
+                                                                (
+                                                                    (
+                                                                        (
+                                                                            (
+                                                                                (
+                                                                                    (
+                                                                                        f'{PAT_HEADER}|'
+                                                                                        + PAT_GRAPHIC
+                                                                                    )
+                                                                                    + '|'
+                                                                                )
+                                                                                + PAT_PIPEWORD
+                                                                            )
+                                                                            + '|'
+                                                                        )
+                                                                        + PAT_STARWORD
+                                                                    )
+                                                                    + '|'
+                                                                )
+                                                                + PAT_COMMAND
+                                                            )
+                                                            + '|'
+                                                        )
+                                                        + PAT_OPTWORD
+                                                    )
+                                                    + '|'
+                                                )
+                                                + PAT_CTRL
+                                            )
+                                            + '|'
+                                        )
+                                        + PAT_SPECIAL
+                                    )
+                                    + '|'
+                                )
+                                + PAT_TITLE
+                            )
+                            + '|'
+                        )
+                        + PAT_NOTE
+                    )
+                    + '|'
+                )
+                + PAT_URL
+            )
+            + '|'
+        )
+        + PAT_WORD
+    )
+)
+
 RE_NEWLINE = re.compile(r'[\r\n]')
 # H1 header "=====…"
 # H2 header "-----…"
@@ -173,8 +231,7 @@ class VimH2H(object):
         self._version = version
         self._is_web_version = is_web_version
         for line in RE_NEWLINE.split(tags):
-            m = RE_TAGLINE.match(line)
-            if m:
+            if m := RE_TAGLINE.match(line):
                 tag, filename = m.group(1, 2)
                 self.do_add_tag(filename, tag)
 
@@ -219,16 +276,14 @@ class VimH2H(object):
     def maplink(self, tag, curr_filename, css_class=None):
         links = self._urls.get(tag)
         if links is not None:
-            if links.filename == curr_filename:
-                if css_class == 'l':
-                    return links.link_pipe_same
-                else:
-                    return links.link_plain_same
-            else:
-                if css_class == 'l':
-                    return links.link_pipe_foreign
-                else:
-                    return links.link_plain_foreign
+            if links.filename != curr_filename:
+                return (
+                    links.link_pipe_foreign
+                    if css_class == 'l'
+                    else links.link_plain_foreign
+                )
+
+            return links.link_pipe_same if css_class == 'l' else links.link_plain_same
         elif css_class is not None:
             return '<span class="' + css_class + '">' + html_escape[tag] + \
                 '</span>'
@@ -267,7 +322,7 @@ class VimH2H(object):
                     continue
             if RE_EG_START.match(line_tabs):
                 inexample = 1
-                line = line[0:-1]
+                line = line[:-1]
             if RE_SECTION.match(line_tabs):
                 m = RE_SECTION.match(line)
                 out.extend((r'<span class="c">', m.group(0), r'</span>'))
@@ -317,8 +372,7 @@ class VimH2H(object):
                 inexample = 2
 
         header = []
-        header.append(HEAD.format(encoding=encoding, filename=filename))
-        header.append(HEAD_END)
+        header.extend((HEAD.format(encoding=encoding, filename=filename), HEAD_END))
         if self._is_web_version and is_help_txt:
             vers_note = VERSION_NOTE.replace('{version}', self._version) \
                 if self._version else ''
@@ -356,7 +410,7 @@ def slurp(filename):
 
 
 def usage():
-    return "usage: " + sys.argv[0] + " IN_DIR OUT_DIR [BASENAMES...]"
+    return f"usage: {sys.argv[0]} IN_DIR OUT_DIR [BASENAMES...]"
 
 
 def main():
@@ -375,15 +429,14 @@ def main():
 
     for basename in basenames:
         if os.path.splitext(basename)[1] != '.txt' and basename != 'tags':
-            print("Ignoring " + basename)
+            print(f"Ignoring {basename}")
             continue
-        print("Processing " + basename + "...")
+        print(f"Processing {basename}...")
         path = os.path.join(in_dir, basename)
         text, encoding = slurp(path)
-        outpath = os.path.join(out_dir, basename + '.html')
-        of = open(outpath, 'w')
-        of.write(h2h.to_html(basename, text, encoding))
-        of.close()
+        outpath = os.path.join(out_dir, f'{basename}.html')
+        with open(outpath, 'w') as of:
+            of.write(h2h.to_html(basename, text, encoding))
 
 
 main()

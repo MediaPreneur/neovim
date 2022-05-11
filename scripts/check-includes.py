@@ -26,8 +26,7 @@ def main(argv):
                      stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
         for line in args.file:
-            match = GENERATED_INCLUDE_RE.match(line)
-            if match:
+            if match := GENERATED_INCLUDE_RE.match(line):
                 for d in args.generated_includes_dir:
                     try:
                         f = open(os.path.join(d, match.group(1)))

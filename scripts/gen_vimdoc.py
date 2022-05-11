@@ -39,6 +39,7 @@ Each function :help block is formatted as follows:
     parameter is marked as [out].
   - Each function documentation is separated by a single line.
 """
+
 import argparse
 import os
 import re
@@ -75,7 +76,7 @@ text_width = 78
 script_path = os.path.abspath(__file__)
 base_dir = os.path.dirname(os.path.dirname(script_path))
 out_dir = os.path.join(base_dir, 'tmp-{target}-doc')
-filter_cmd = '%s %s' % (sys.executable, script_path)
+filter_cmd = f'{sys.executable} {script_path}'
 seen_funcs = set()
 msgs = []  # Messages to show on exit.
 lua2dox_filter = os.path.join(base_dir, 'scripts', 'lua2dox_filter')
@@ -131,14 +132,16 @@ CONFIG = {
             'filetype.lua',
             'keymap.lua',
         ],
-        'files': ' '.join([
-            os.path.join(base_dir, 'src/nvim/lua/vim.lua'),
-            os.path.join(base_dir, 'runtime/lua/vim/shared.lua'),
-            os.path.join(base_dir, 'runtime/lua/vim/uri.lua'),
-            os.path.join(base_dir, 'runtime/lua/vim/ui.lua'),
-            os.path.join(base_dir, 'runtime/lua/vim/filetype.lua'),
-            os.path.join(base_dir, 'runtime/lua/vim/keymap.lua'),
-        ]),
+        'files': ' '.join(
+            [
+                os.path.join(base_dir, 'src/nvim/lua/vim.lua'),
+                os.path.join(base_dir, 'runtime/lua/vim/shared.lua'),
+                os.path.join(base_dir, 'runtime/lua/vim/uri.lua'),
+                os.path.join(base_dir, 'runtime/lua/vim/ui.lua'),
+                os.path.join(base_dir, 'runtime/lua/vim/filetype.lua'),
+                os.path.join(base_dir, 'runtime/lua/vim/keymap.lua'),
+            ]
+        ),
         'file_patterns': '*.lua',
         'fn_name_prefix': '',
         'section_name': {
@@ -176,29 +179,28 @@ CONFIG = {
             'sync.lua',
             'protocol.lua',
         ],
-        'files': ' '.join([
-            os.path.join(base_dir, 'runtime/lua/vim/lsp'),
-            os.path.join(base_dir, 'runtime/lua/vim/lsp.lua'),
-        ]),
+        'files': ' '.join(
+            [
+                os.path.join(base_dir, 'runtime/lua/vim/lsp'),
+                os.path.join(base_dir, 'runtime/lua/vim/lsp.lua'),
+            ]
+        ),
         'file_patterns': '*.lua',
         'fn_name_prefix': '',
         'section_name': {'lsp.lua': 'lsp'},
         'section_fmt': lambda name: (
             'Lua module: vim.lsp'
             if name.lower() == 'lsp'
-            else f'Lua module: vim.lsp.{name.lower()}'),
+            else f'Lua module: vim.lsp.{name.lower()}'
+        ),
         'helptag_fmt': lambda name: (
-            '*lsp-core*'
-            if name.lower() == 'lsp'
-            else f'*lsp-{name.lower()}*'),
-        'fn_helptag_fmt': lambda fstem, name: (
-            f'*vim.lsp.{name}()*'
-            if fstem == 'lsp' and name != 'client'
-            else (
-                '*vim.lsp.client*'
-                # HACK. TODO(justinmk): class/structure support in lua2dox
-                if 'lsp.client' == f'{fstem}.{name}'
-                else f'*vim.lsp.{fstem}.{name}()*')),
+            '*lsp-core*' if name.lower() == 'lsp' else f'*lsp-{name.lower()}*'
+        ),
+        'fn_helptag_fmt': lambda fstem, name: f'*vim.lsp.{name}()*'
+        if fstem == 'lsp' and name != 'client'
+        else '*vim.lsp.client*'
+        if f'{fstem}.{name}' == 'lsp.client'
+        else f'*vim.lsp.{fstem}.{name}()*',
         'module_override': {},
         'append_only': [],
     },
@@ -230,25 +232,28 @@ CONFIG = {
             'highlighter.lua',
             'languagetree.lua',
         ],
-        'files': ' '.join([
-            os.path.join(base_dir, 'runtime/lua/vim/treesitter.lua'),
-            os.path.join(base_dir, 'runtime/lua/vim/treesitter/'),
-        ]),
+        'files': ' '.join(
+            [
+                os.path.join(base_dir, 'runtime/lua/vim/treesitter.lua'),
+                os.path.join(base_dir, 'runtime/lua/vim/treesitter/'),
+            ]
+        ),
         'file_patterns': '*.lua',
         'fn_name_prefix': '',
         'section_name': {},
         'section_fmt': lambda name: (
             'Lua module: vim.treesitter'
             if name.lower() == 'treesitter'
-            else f'Lua module: vim.treesitter.{name.lower()}'),
+            else f'Lua module: vim.treesitter.{name.lower()}'
+        ),
         'helptag_fmt': lambda name: (
             '*lua-treesitter-core*'
             if name.lower() == 'treesitter'
-            else f'*treesitter-{name.lower()}*'),
+            else f'*treesitter-{name.lower()}*'
+        ),
         'fn_helptag_fmt': lambda fstem, name: (
-            f'*{name}()*'
-            if name != 'new'
-            else f'*{fstem}.{name}()*'),
+            f'*{name}()*' if name != 'new' else f'*{fstem}.{name}()*'
+        ),
         # 'fn_helptag_fmt': lambda fstem, name: (
         #     f'*vim.treesitter.{name}()*'
         #     if fstem == 'treesitter'
@@ -259,8 +264,9 @@ CONFIG = {
         #         else f'*vim.lsp.{fstem}.{name}()*')),
         'module_override': {},
         'append_only': [],
-    }
+    },
 }
+
 
 param_exclude = (
     'channel_id',
@@ -335,9 +341,7 @@ def get_child(parent, name):
 
 def self_or_child(n):
     """Gets the first child node, or self."""
-    if len(n.childNodes) == 0:
-        return n
-    return n.childNodes[0]
+    return n if len(n.childNodes) == 0 else n.childNodes[0]
 
 
 def clean_text(text):
@@ -357,7 +361,7 @@ def clean_lines(text):
 
 
 def is_blank(text):
-    return '' == clean_lines(text)
+    return clean_lines(text) == ''
 
 
 def get_text(n, preformatted=False):
@@ -368,21 +372,21 @@ def get_text(n, preformatted=False):
     if n.nodeName == 'computeroutput':
         for node in n.childNodes:
             text += get_text(node)
-        return '`{}` '.format(text)
+        return f'`{text}` '
     for node in n.childNodes:
         if node.nodeType == node.TEXT_NODE:
             text += node.data if preformatted else clean_text(node.data)
         elif node.nodeType == node.ELEMENT_NODE:
-            text += ' ' + get_text(node, preformatted)
+            text += f' {get_text(node, preformatted)}'
     return text
 
 
 # Gets the length of the last line in `text`, excluding newline ("\n") char.
 def len_lastline(text):
     lastnl = text.rfind('\n')
-    if -1 == lastnl:
+    if lastnl == -1:
         return len(text)
-    if '\n' == text[-1]:
+    if text[-1] == '\n':
         return lastnl - (1 + text.rfind('\n', 0, lastnl))
     return len(text) - (1 + lastnl)
 
@@ -447,9 +451,7 @@ def doc_wrap(text, prefix='', width=70, func=False, indent=None):
 
 
 def max_name(names):
-    if len(names) == 0:
-        return 0
-    return max(len(name) for name in names)
+    return 0 if len(names) == 0 else max(len(name) for name in names)
 
 
 def update_params_map(parent, ret_map, width=62):
@@ -471,8 +473,7 @@ def update_params_map(parent, ret_map, width=62):
     # `ret_map` is a name:desc map.
     for name, node in params.items():
         desc = ''
-        desc_node = get_child(node, 'parameterdescription')
-        if desc_node:
+        if desc_node := get_child(node, 'parameterdescription'):
             desc = fmt_node_as_vimhelp(
                     desc_node, width=width, indent=(' ' * max_name_len))
             ret_map[name] = desc
@@ -614,12 +615,14 @@ def para_as_map(parent, indent='', width=62):
                     raise RuntimeError('unhandled simplesect: {}\n{}'.format(
                         child.nodeName, child.toprettyxml(indent='  ', newl='\n')))
             else:
-                if (prev is not None
-                        and is_inline(self_or_child(prev))
-                        and is_inline(self_or_child(child))
-                        and '' != get_text(self_or_child(child)).strip()
-                        and text
-                        and ' ' != text[-1]):
+                if (
+                    prev is not None
+                    and is_inline(self_or_child(prev))
+                    and is_inline(self_or_child(child))
+                    and get_text(self_or_child(child)).strip() != ''
+                    and text
+                    and text[-1] != ' '
+                ):
                     text += ' '
 
                 text += render_node(child, text, indent=indent, width=width)
@@ -643,8 +646,10 @@ def para_as_map(parent, indent='', width=62):
         title = get_text(get_child(child, 'xreftitle')) + ' '
         xrefs.add(title)
         xrefdesc = get_text(get_child(child, 'xrefdescription'))
-        chunks['xrefs'].append(doc_wrap(xrefdesc, prefix='{}: '.format(title),
-                                        width=width) + '\n')
+        chunks['xrefs'].append(
+            (doc_wrap(xrefdesc, prefix=f'{title}: ', width=width) + '\n')
+        )
+
 
     return chunks
 
