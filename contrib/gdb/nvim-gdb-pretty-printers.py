@@ -19,9 +19,7 @@ SGR0 = '\x1b(B\x1b[m'
 
 def get_color_code(bg, color_num):
     if color_num < 16:
-        prefix = 3
-        if color_num > 7:
-            prefix = 9
+        prefix = 9 if color_num > 7 else 3
         if bg:
             prefix += 1
         color_num %= 8
